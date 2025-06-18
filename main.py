@@ -18,34 +18,25 @@ def classify_transaction(description):
         return "Error: " + str(e)
 
 def import_bank_statement(file):
-    df = pd.read_csv(file)
+    # Try reading with semicolon separator
+    df = pd.read_csv(file, sep=';')
     df.columns = df.columns.str.lower().str.strip()
-    df['date'] = pd.to_datetime(df['date'])
-    df['value'] = df['debit'].fillna(0) - df['credit'].fillna(0)
+
+    # Rename columns to standard names
+    df.rename(columns={
+        'date': 'date',
+        'description': 'description',
+        'amount': 'value'
+    }, inplace=True)
+
+    # Convert date and value
+    df['date'] = pd.to_datetime(df['date'], dayfirst=False, errors='coerce')
+    df['value'] = pd.to_numeric(df['value'], errors='coerce')
+
+    # Drop any rows with missing values
+    df = df.dropna(subset=['date', 'description', 'value'])
+
     return df[['date', 'description', 'value']]
-
-def classify_bank_dataframe(df):
-    classified_data = []
-    for _, row in df.iterrows():
-        result = classify_transaction(row['description'])
-        parts = result.split("\n")
-        try:
-            account_name = parts[0].split(":", 1)[-1].strip()
-            account_number = parts[1].split(":", 1)[-1].strip()
-            vat_type = parts[2].split(":", 1)[-1].strip()
-            vat_percent = float(parts[3].split(":", 1)[-1].replace('%','').strip())
-            reason = parts[4].split(":", 1)[-1].strip()
-        except:
-            account_name, account_number, vat_type, vat_percent, reason = "Unknown", "9999", "None", 0.0, "Parsing Error"
-
-        vat_amount = abs(row['value']) * (vat_percent / 100) if vat_type.lower() == 'standard' else 0
-        classified_data.append({
-            'date': row['date'], 'description': row['description'], 'value': row['value'],
-            'account_name': account_name, 'account_number': account_number,
-            'vat_type': vat_type, 'vat_percent': vat_percent,
-            'vat_amount': round(vat_amount, 2), 'ai_reason': reason
-        })
-    return pd.DataFrame(classified_data)
 
 def generate_general_ledger(df):
     ledger_entries = []

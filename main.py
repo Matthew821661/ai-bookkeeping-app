@@ -6,7 +6,7 @@ import openai
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def classify_transaction(description):
-    prompt = f"Classify the following transaction for a South African SME accountant: '{description}'. Provide:\n1. General Ledger Account Name\n2. Account Number\n3. VAT Type (Standard, Zero, Exempt, None)\n4. VAT Percentage (15% or 0% or 0)\n5. One-line reason"
+    prompt = f"Classify the following transaction in accordance with IFRS for SMEs: '{description}'. Provide:\n1. General Ledger Account Name\n2. Account Number\n3. VAT Type (Standard, Zero, Exempt, None)\n4. VAT Percentage (15% or 0% or 0)\n5. One-line reason"
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",

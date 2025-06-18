@@ -1,12 +1,18 @@
-
 import streamlit as st
 import pandas as pd
 import openai
 
+# ✅ Page settings
+st.set_page_config(
+    page_title="Matthew's AI Bookkeeper",
+    page_icon="📘",
+    layout="wide"
+)
+
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def classify_transaction(description):
-    prompt = f"Classify the following transaction in accordance with IFRS for SMEs: '{description}'. Provide:\n1. General Ledger Account Name\n2. Account Number\n3. VAT Type (Standard, Zero, Exempt, None)\n4. VAT Percentage (15% or 0% or 0)\n5. One-line reason"
+    prompt = f"Classify the following transaction for a South African SME accountant: '{description}'. Provide:\n1. General Ledger Account Name\n2. Account Number\n3. VAT Type (Standard, Zero, Exempt, None)\n4. VAT Percentage (15% or 0% or 0)\n5. One-line reason"
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4o",
@@ -25,7 +31,7 @@ def import_bank_statement(file):
         'description': 'description',
         'amount': 'value'
     }, inplace=True)
-    df['date'] = pd.to_datetime(df['date'], dayfirst=False, errors='coerce')
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df['value'] = pd.to_numeric(df['value'], errors='coerce')
     df = df.dropna(subset=['date', 'description', 'value'])
     return df[['date', 'description', 'value']]
@@ -34,15 +40,29 @@ def classify_bank_dataframe(df):
     classified_data = []
     for _, row in df.iterrows():
         result = classify_transaction(row['description'])
-        parts = result.split("\n")
-        try:
-            account_name = parts[0].split(":", 1)[-1].strip()
-            account_number = parts[1].split(":", 1)[-1].strip()
-            vat_type = parts[2].split(":", 1)[-1].strip()
-            vat_percent = float(parts[3].split(":", 1)[-1].replace('%','').strip())
-            reason = parts[4].split(":", 1)[-1].strip()
-        except:
-            account_name, account_number, vat_type, vat_percent, reason = "Unknown", "9999", "None", 0.0, "Parsing Error"
+        lines = result.split("\n")
+
+        # Default values
+        account_name = "Unknown"
+        account_number = "9999"
+        vat_type = "None"
+        vat_percent = 0.0
+        reason = "Could not extract fields"
+
+        for line in lines:
+            if "General Ledger Account Name" in line:
+                account_name = line.split(":", 1)[-1].strip()
+            elif "Account Number" in line:
+                account_number = line.split(":", 1)[-1].strip()
+            elif "VAT Type" in line:
+                vat_type = line.split(":", 1)[-1].strip()
+            elif "VAT Percentage" in line:
+                try:
+                    vat_percent = float(line.split(":", 1)[-1].replace('%', '').strip())
+                except:
+                    vat_percent = 0.0
+            elif "One-line reason" in line:
+                reason = line.split(":", 1)[-1].strip()
 
         vat_amount = abs(row['value']) * (vat_percent / 100) if vat_type.lower() == 'standard' else 0
         classified_data.append({
@@ -72,7 +92,7 @@ def generate_trial_balance(ledger_df):
     tb['balance'] = tb['debit'] - tb['credit']
     return tb
 
-st.title("🧾 Mattrade AI bookkeeping")
+st.title("📘 Matthew's AI Bookkeeper")
 
 uploaded_file = st.file_uploader("Upload Bank Statement (.csv with semicolon ';')", type="csv")
 if uploaded_file:

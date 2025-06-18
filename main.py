@@ -4,7 +4,7 @@ import openai
 
 # ✅ Page settings
 st.set_page_config(
-    page_title="Mattrade bookking",
+    page_title="Mattrade's bookking",
     page_icon="📘",
     layout="wide"
 )
@@ -92,7 +92,7 @@ def generate_trial_balance(ledger_df):
     tb['balance'] = tb['debit'] - tb['credit']
     return tb
 
-st.title("📘 Matthew's AI Bookkeeper")
+st.title("📘 Mattrade's booking")
 
 uploaded_file = st.file_uploader("Upload Bank Statement (.csv with semicolon ';')", type="csv")
 if uploaded_file:

@@ -72,7 +72,7 @@ def generate_trial_balance(ledger_df):
     tb['balance'] = tb['debit'] - tb['credit']
     return tb
 
-st.title("🧾 Smart AI Bookkeeping")
+st.title("🧾 Mattrade01 Smart AI Bookkeeping")
 
 uploaded_file = st.file_uploader("Upload Bank Statement (.csv with semicolon ';')", type="csv")
 if uploaded_file:

@@ -4,7 +4,7 @@ import openai
 
 # ✅ Page settings
 st.set_page_config(
-    page_title="Matthew's AI Bookkeeper",
+    page_title="Mattrade bookking",
     page_icon="📘",
     layout="wide"
 )

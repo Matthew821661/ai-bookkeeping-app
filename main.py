@@ -5,7 +5,7 @@ import json
 
 # ✅ Page Settings
 st.set_page_config(
-    page_title="Mattrade's AI Bookkeeping",
+    page_title="Mattrade's AI bookkeeping",
     page_icon="📘",
     layout="wide"
 )
